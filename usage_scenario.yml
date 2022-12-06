@@ -14,7 +14,7 @@
     }
   ],
   "name": "Chrome Energy Test",
-  "author": "Florian Kirsten",
+  "author": "FKirsten",
   "version": 1,
   "services": {
     "green-coding-puppeteer-container": {
