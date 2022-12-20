@@ -72,7 +72,7 @@ let sleep = ms => new Promise(r => setTimeout(r, ms));
     video.play();
   });
 
-  console.log(microtime.now(), " Started videoplayback (1 minute)");
+  console.log(microtime.now(), " Started video playback (1 minute)");
   /*await page.screenshot({
     path: 'screenshot1.jpg'
   });*/
@@ -81,6 +81,6 @@ let sleep = ms => new Promise(r => setTimeout(r, ms));
     path: 'screenshot10.jpg'
   });*/
 
-  console.log(microtime.now(), " Finished playback and closing browser");
+  console.log(microtime.now(), " Finished video playback, closing browser");
   await browser.close();
 })();
