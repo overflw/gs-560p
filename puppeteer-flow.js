@@ -16,6 +16,7 @@ let sleep = ms => new Promise(r => setTimeout(r, ms));
   });
 
   const page = await browser.newPage();
+  /*
   const dimensions = await page.evaluate(() => {
     return {
       width: document.documentElement.clientWidth,
@@ -24,6 +25,7 @@ let sleep = ms => new Promise(r => setTimeout(r, ms));
     };
   });
   console.log("Dimensions:", dimensions); // Only to double-check if the dimensions are as expected
+  */
 
   console.log(microtime.now(), " Open Youtube");
   await page.goto("https://www.youtube.com/embed/aqz-KE-bpKQ", {
@@ -31,11 +33,9 @@ let sleep = ms => new Promise(r => setTimeout(r, ms));
   });
   await sleep(500);
 
-  // Start youtube video and set quality
-
+  // Open quality menu
   await page.evaluate(async () => {
     let sleep = ms => new Promise(r => setTimeout(r, ms));
-    const quality = '480p';
 
     // Enable quality settingsbutton
     let playButton = document.getElementsByClassName("ytp-large-play-button")[0];
@@ -49,38 +49,41 @@ let sleep = ms => new Promise(r => setTimeout(r, ms));
     let qualityMenu = document.getElementsByClassName("ytp-panel-menu")[0].lastChild;
     qualityMenu.click();
     await sleep(500);
-
-    let qualityOptions = [...document.getElementsByClassName("ytp-menuitem")];
-    let selection;
-    if (quality == 'Highest') selection = qualityOptions[0];
-    else selection = qualityOptions.filter(el => el.innerText == quality)[0];
-
-    if (!selection) {
-      let qualityTexts = qualityOptions.map(el => el.innerText).join('\n');
-      console.log('"' + quality + '" not found. Options are: \n\nHighest\n' + qualityTexts);
-      settingsButton.click();                               // click menu button to close
-      return;
-    }
-
-    if (selection.attributes['aria-checked'] === undefined) { // not checked
-      selection.click();
-      console.log('Quality set to ' + selection.textContent);
-    } else settingsButton.click();                            // click menu button to close
-
-    // start the video
-    let video = document.querySelector('video');
-    video.play();
   });
 
+  // Select quality
+  const quality = '480p';
+  let selection;
+  let qualityOptions = await page.$$(".ytp-menuitem")
+  let qualityOptionsValues = await Promise.all(qualityOptions.map(async (el) => await (await el.getProperty('innerText')).jsonValue()));
+
+  // console.log("Got qualityOptions", qualityOptionsValues);
+  if (quality === 'Highest') {
+    selection = qualityOptions[0];
+  } else {
+    let index = qualityOptionsValues.findIndex((el) => el === quality);
+    selection = qualityOptions[index];
+  }
+
+  if (!selection) {
+    let qualityTexts = qualityOptions.map(async (el) => await el.getProperty('innerText')).join('\n');
+    console.log('"' + quality + '" not found. Options are: \n\nHighest\n' + qualityTexts);
+    //settingsButton.click();                               // click menu button to close
+  }
+
+  if (await (await selection.getProperty('aria-checked')).jsonValue() === undefined) { // not checked
+    selection.click();
+    // console.log('Quality set to ' + await(await selection.getProperty('textContent')).jsonValue());
+  } // else settingsButton.click();                            // click menu button to close
+
+  // start the video
+  // await page.$eval('video', el => el.play());
+
   console.log(microtime.now(), " Started video playback (1 minute)");
-  /*await page.screenshot({
-    path: 'screenshot1.jpg'
-  });*/
-  await sleep(1000 * 10);
-  /*await page.screenshot({
-    path: 'screenshot10.jpg'
-  });*/
+
+  await sleep(1000 * 60);
 
   console.log(microtime.now(), " Finished video playback, closing browser");
+
   await browser.close();
 })();
